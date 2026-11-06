@@ -54,6 +54,8 @@ def debug_create_admin():
 
     try:
         from app.models import UserProfile
+        # Ensure all tables exist before querying
+        db.create_all()
         user = User.query.filter_by(email=email).first()
         if not user:
             user = User(email=email, role='admin')
