@@ -25,25 +25,52 @@ def debug_config():
 
 @web.route('/debug-create-admin')
 def debug_create_admin():
-    email = request.args.get('email', 'admin@sparkvista.com')
-    password = request.args.get('password', 'admin123')
-    
+    """
+    Secure admin creation endpoint.
+    Protected by ADMIN_SETUP_TOKEN env var.
+    Usage: /debug-create-admin?email=you@example.com&password=yourpass&token=YOUR_TOKEN
+    Disable by removing ADMIN_SETUP_TOKEN from environment after first use.
+    """
+    import os
+    setup_token = os.environ.get('ADMIN_SETUP_TOKEN', '').strip()
+
+    # If no token is configured, this endpoint is disabled
+    if not setup_token:
+        return "Admin setup is disabled. Set ADMIN_SETUP_TOKEN in environment to enable.", 403
+
+    # Validate token from query string
+    provided_token = request.args.get('token', '').strip()
+    if not provided_token or provided_token != setup_token:
+        return "Invalid or missing token.", 403
+
+    email    = request.args.get('email', '').strip()
+    password = request.args.get('password', '').strip()
+
+    if not email or not password:
+        return "Usage: /debug-create-admin?email=EMAIL&password=PASSWORD&token=TOKEN", 400
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters.", 400
+
     try:
+        from app.models import UserProfile
         user = User.query.filter_by(email=email).first()
         if not user:
             user = User(email=email, role='admin')
             user.password = password
+            profile = UserProfile(full_name='Super Admin', phone='')
+            user.profile = profile
             db.session.add(user)
             action = "Created"
         else:
             user.role = 'admin'
             user.password = password
             action = "Updated"
-            
+
         db.session.commit()
-        return f"Admin User {action}: {email} (Password: {password})"
+        return f"Admin {action} successfully: {email}. Remove ADMIN_SETUP_TOKEN from environment now.", 200
     except Exception as e:
-        return f"Error creating admin: {str(e)}"
+        return f"Error: {str(e)}", 500
 
 
 
