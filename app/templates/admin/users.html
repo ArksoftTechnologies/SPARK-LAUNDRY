@@ -1,0 +1,383 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
+<a href="/admin/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-chart-line w-5"></i> Analytics
+</a>
+<a href="/admin/orders"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-clipboard-list w-5"></i> Orders
+</a>
+<a href="/admin/items"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-tags w-5"></i> Products & Prices
+</a>
+<a href="/admin/users"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-white bg-brand-blue shadow-lg shadow-blue-200 font-bold transition">
+    <i class="fas fa-users w-5"></i> Users
+</a>
+<a href="/admin/finance"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-wallet w-5"></i> Finance
+</a>
+<a href="/admin/settings"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-cog w-5"></i> Settings
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Page Header ──────────────────────────────────────────────────────── -->
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-brand-dark">User Management</h1>
+        <p class="text-gray-500 mt-1">Manage customers, staff, and riders.</p>
+    </div>
+    <button onclick="openCreateModal()"
+        class="flex items-center gap-2 bg-brand-blue text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-brand-dark transition transform hover:-translate-y-1">
+        <i class="fas fa-user-plus"></i> Add New User
+    </button>
+</div>
+
+<!-- ── Filter Tabs ──────────────────────────────────────────────────────── -->
+<div class="flex gap-2 mb-6 flex-wrap">
+    <button onclick="filterUsers('all')" id="tab-all"
+        class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-brand-blue text-white">All</button>
+    <button onclick="filterUsers('customer')" id="tab-customer"
+        class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Customers</button>
+    <button onclick="filterUsers('staff')" id="tab-staff"
+        class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Staff</button>
+    <button onclick="filterUsers('rider')" id="tab-rider"
+        class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Riders</button>
+    <button onclick="filterUsers('admin')" id="tab-admin"
+        class="tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">Admins</button>
+</div>
+
+<!-- ── Users Table ──────────────────────────────────────────────────────── -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50/50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">User</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Phone</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Role</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Joined</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200" id="users-table-body">
+                <tr><td colspan="7" class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL — Create New User
+════════════════════════════════════════════════════════════════ -->
+<div id="create-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-brand-dark">Create New User</h3>
+            <button onclick="closeModal('create-modal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="create-user-form" onsubmit="submitCreateUser(event)" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" name="full_name" required
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" name="email" required
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="tel" name="phone"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="role" value="customer" class="peer sr-only" required>
+                        <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-bold text-gray-600 peer-checked:border-brand-blue peer-checked:bg-blue-50 peer-checked:text-brand-blue transition">
+                            <i class="fas fa-user mr-1"></i> Customer
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="role" value="staff" class="peer sr-only">
+                        <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-bold text-gray-600 peer-checked:border-brand-blue peer-checked:bg-blue-50 peer-checked:text-brand-blue transition">
+                            <i class="fas fa-user-tie mr-1"></i> Staff
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="role" value="rider" class="peer sr-only">
+                        <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-bold text-gray-600 peer-checked:border-brand-blue peer-checked:bg-blue-50 peer-checked:text-brand-blue transition">
+                            <i class="fas fa-motorcycle mr-1"></i> Rider
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="role" value="admin" class="peer sr-only">
+                        <div class="px-4 py-2 rounded-lg border border-gray-200 text-center text-sm font-bold text-gray-600 peer-checked:border-brand-blue peer-checked:bg-blue-50 peer-checked:text-brand-blue transition">
+                            <i class="fas fa-shield-alt mr-1"></i> Admin
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" name="password" required minlength="6"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            </div>
+            <button type="submit"
+                class="w-full bg-brand-blue text-white font-bold py-3 rounded-xl hover:bg-brand-dark transition shadow-lg mt-2">
+                Create Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MODAL — Edit / Profile Update
+════════════════════════════════════════════════════════════════ -->
+<div id="edit-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-brand-dark">Edit User Profile</h3>
+            <button onclick="closeModal('edit-modal')" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="edit-user-form" onsubmit="submitEditUser(event)" class="p-6 space-y-4">
+            <input type="hidden" id="edit-user-id">
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="edit-full-name"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input type="tel" id="edit-phone"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="edit-email" required
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select id="edit-role"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                    <option value="customer">Customer</option>
+                    <option value="staff">Staff</option>
+                    <option value="rider">Rider</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <!-- Password reset section -->
+            <div class="border-t border-gray-100 pt-4">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Reset Password (optional)</p>
+                <input type="password" id="edit-new-password" placeholder="Leave blank to keep current password" minlength="6"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm">
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeModal('edit-modal')"
+                    class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">Cancel</button>
+                <button type="submit"
+                    class="flex-1 bg-brand-blue text-white font-bold py-3 rounded-xl hover:bg-brand-dark transition shadow-md">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Toast Notification ───────────────────────────────────────────────── -->
+<div id="toast" class="fixed bottom-6 right-6 z-[999] hidden">
+    <div id="toast-inner" class="flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white font-bold text-sm">
+        <i id="toast-icon" class="fas fa-check-circle text-lg"></i>
+        <span id="toast-msg"></span>
+    </div>
+</div>
+
+<script>
+const token = () => localStorage.getItem('access_token');
+
+function openModal(id)  { const m = document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+function closeModal(id) { const m = document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const inner = document.getElementById('toast-inner');
+    const icon  = document.getElementById('toast-icon');
+    document.getElementById('toast-msg').textContent = msg;
+    inner.className = `flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white font-bold text-sm ${type === 'success' ? 'bg-green-600' : 'bg-red-500'}`;
+    icon.className  = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-lg`;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3500);
+}
+
+// ── Role badge ──────────────────────────────────────────────────────────────
+function roleBadge(role) {
+    const map = {
+        admin:    'bg-purple-100 text-purple-800',
+        staff:    'bg-green-100 text-green-800',
+        rider:    'bg-orange-100 text-orange-800',
+        customer: 'bg-blue-100 text-blue-800',
+    };
+    return `<span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-full ${map[role]||'bg-gray-100 text-gray-800'} uppercase">${role}</span>`;
+}
+
+// ── Load & filter ────────────────────────────────────────────────────────────
+let allUsers = [];
+let currentFilter = 'all';
+
+async function loadUsers() {
+    const res = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token() } });
+    allUsers = await res.json();
+    renderTable(allUsers);
+}
+
+function filterUsers(role) {
+    currentFilter = role;
+    // Update tab styles
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600 hover:bg-gray-200';
+    });
+    const active = document.getElementById('tab-' + role);
+    if (active) active.className = 'tab-btn px-4 py-2 rounded-full text-sm font-bold bg-brand-blue text-white';
+
+    const filtered = role === 'all' ? allUsers : allUsers.filter(u => u.role === role);
+    renderTable(filtered);
+}
+
+function renderTable(users) {
+    const tbody = document.getElementById('users-table-body');
+    if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-400">No users found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = users.map(u => `
+        <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4 text-sm text-gray-400 font-medium">#${u.id}</td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-brand-light text-brand-blue flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        ${((u.profile?.full_name || u.email)[0]).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-gray-900">${u.profile?.full_name || '—'}</div>
+                        <div class="text-xs text-gray-500">${u.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">${u.profile?.phone || '—'}</td>
+            <td class="px-6 py-4">${roleBadge(u.role)}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td class="px-6 py-4">
+                <span class="text-xs font-bold px-2 py-1 rounded-full ${u.is_active !== false ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}">
+                    ${u.is_active !== false ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <button onclick="openEditModal(${u.id})"
+                    class="text-brand-blue hover:text-brand-dark font-bold text-xs bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition">
+                    <i class="fas fa-edit mr-1"></i> Edit
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ── Create User ─────────────────────────────────────────────────────────────
+function openCreateModal() {
+    document.getElementById('create-user-form').reset();
+    openModal('create-modal');
+}
+
+async function submitCreateUser(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+        body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+        closeModal('create-modal');
+        form.reset();
+        loadUsers();
+        showToast('User created successfully!');
+    } else {
+        const err = await res.json();
+        showToast(err.message || 'Failed to create user', 'error');
+    }
+}
+
+// ── Edit User ────────────────────────────────────────────────────────────────
+function openEditModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+
+    document.getElementById('edit-user-id').value       = user.id;
+    document.getElementById('edit-email').value         = user.email;
+    document.getElementById('edit-full-name').value     = user.profile?.full_name || '';
+    document.getElementById('edit-phone').value         = user.profile?.phone || '';
+    document.getElementById('edit-role').value          = user.role;
+    document.getElementById('edit-new-password').value  = '';
+
+    openModal('edit-modal');
+}
+
+async function submitEditUser(e) {
+    e.preventDefault();
+    const userId = document.getElementById('edit-user-id').value;
+    const newPassword = document.getElementById('edit-new-password').value.trim();
+
+    const payload = {
+        email:      document.getElementById('edit-email').value.trim(),
+        full_name:  document.getElementById('edit-full-name').value.trim(),
+        phone:      document.getElementById('edit-phone').value.trim(),
+        role:       document.getElementById('edit-role').value,
+    };
+    if (newPassword) payload.new_password = newPassword;
+
+    const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        closeModal('edit-modal');
+        loadUsers();
+        showToast('User updated successfully!');
+    } else {
+        const err = await res.json();
+        showToast(err.message || 'Update failed', 'error');
+    }
+}
+
+loadUsers();
+</script>
+
+{% endblock %}

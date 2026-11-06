@@ -1,0 +1,178 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
+<a href="/admin/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-chart-pie w-5"></i> Overview
+</a>
+<a href="/admin/items"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-tags w-5"></i> Products & Prices
+</a>
+<a href="/admin/users"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-users w-5"></i> Users
+</a>
+<a href="/admin/orders"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-clipboard-list w-5"></i> Orders
+</a>
+<a href="/admin/finance"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-white bg-brand-blue shadow-lg shadow-blue-200 font-bold transition">
+    <i class="fas fa-wallet w-5"></i> Finance
+</a>
+<a href="/admin/settings"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-cog w-5"></i> Settings
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-extrabold flex items-center gap-3 text-brand-dark">
+            Rider Finance
+        </h1>
+        <p class="text-gray-500 mt-2">Manage payouts and view rider earnings.</p>
+    </div>
+</div>
+
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Rider</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Active Tasks</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Wallet Balance</th>
+                <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Action</th>
+            </tr>
+        </thead>
+        <tbody id="finance-table" class="divide-y divide-gray-200">
+            <!-- Populated by JS -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Payout Modal -->
+<div id="payout-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Process Payout</h3>
+        <p class="text-sm text-gray-500 mb-6">Deduct funds from rider's wallet.</p>
+
+        <form id="payoutForm">
+            <input type="hidden" id="payout-rider-id">
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Amount (₦)</label>
+                <input type="number" id="payout-amount" required min="1" step="0.01"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue font-bold text-lg">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Note</label>
+                <input type="text" id="payout-note" value="Weekly Payout"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue text-sm">
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closePayoutModal()"
+                    class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-green-600 shadow-lg shadow-green-200">Pay</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function loadFinanceData() {
+        const token = localStorage.getItem('access_token');
+        try {
+            const res = await fetch('/api/admin/finance/riders', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const riders = await res.json();
+
+            document.getElementById('finance-table').innerHTML = riders.map(r => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center font-bold mr-3">
+                                ${r.name[0]}
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">${r.name}</div>
+                                <div class="text-xs text-gray-500">${r.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            ${r.active_tasks} Active
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-lg font-mono font-bold ${r.balance > 0 ? 'text-brand-green' : 'text-gray-400'}">
+                            ₦${r.balance.toLocaleString()}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="openPayoutModal(${r.id})" 
+                            class="text-brand-blue hover:text-brand-dark font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition">
+                            Payout
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function openPayoutModal(riderId) {
+        document.getElementById('payout-rider-id').value = riderId;
+        document.getElementById('payout-amount').value = '';
+        document.getElementById('payout-modal').classList.remove('hidden');
+        document.getElementById('payout-modal').classList.add('flex');
+    }
+
+    function closePayoutModal() {
+        document.getElementById('payout-modal').classList.add('hidden');
+        document.getElementById('payout-modal').classList.remove('flex');
+    }
+
+    document.getElementById('payoutForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('access_token');
+        const riderId = document.getElementById('payout-rider-id').value;
+        const amount = document.getElementById('payout-amount').value;
+        const note = document.getElementById('payout-note').value;
+
+        try {
+            const res = await fetch('/api/admin/finance/payout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ rider_id: riderId, amount: amount, note: note })
+            });
+
+            if (res.ok) {
+                alert('Payout Successful');
+                closePayoutModal();
+                loadFinanceData();
+            } else {
+                const err = await res.json();
+                alert(err.message);
+            }
+        } catch (e) {
+            alert('Payout failed');
+        }
+    });
+
+    loadFinanceData();
+</script>
+{% endblock %}

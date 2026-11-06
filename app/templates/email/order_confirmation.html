@@ -1,0 +1,25 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<h2>Order Confirmation 📦</h2>
+<p>Hello <strong>{{ order.customer.profile.full_name if order.customer.profile and order.customer.profile.full_name else 'Valued Customer' }}</strong>,</p>
+
+<p>Your order <span class="highlight">#{{ order.tracking_id }}</span> has been successfully placed!</p>
+
+<div style="background: #f9fafb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p><strong>Total Amount:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+    {% if order.pickup_time %}
+    <p><strong>Pickup Time:</strong> {{ order.pickup_time.strftime('%d %b %Y, %I:%M %p') }}</p>
+    {% endif %}
+    <p><strong>Items:</strong></p>
+    <ul>
+        {% for item in order.items %}
+        <li>{{ item.quantity }}x {{ item.item_name }} ({{ item.service_type }})</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<p>Our rider will be assigned shortly to pick up your laundry.</p>
+
+<a href="{{ url_for('web.dashboard', _external=True) }}" class="button">Track Your Order</a>
+{% endblock %}

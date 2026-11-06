@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark Laundry - Premium Laundry Service</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0066CC',
+                            dark: '#004C99',
+                            light: '#E6F0FA',
+                            yellow: '#FFCC00',
+                            accent: '#F4F7F6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 antialiased font-sans">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Top Bar -->
+    <div class="bg-brand-blue text-white py-2 text-sm hidden md:block">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div class="flex space-x-6">
+                <span><i class="fas fa-phone-alt mr-2"></i> +234 915 740 6159</span>
+                <span><i class="fas fa-envelope mr-2"></i> info@laundry.sparkvista.biz</span>
+                <span><i class="fas fa-clock mr-2"></i> Mon - Sat: 8:00 AM - 8:00 PM</span>
+            </div>
+            <div class="flex space-x-4">
+                <a href="#" class="hover:text-brand-yellow"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="hover:text-brand-yellow"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="hover:text-brand-yellow"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="bg-white sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="/" class="flex-shrink-0 flex items-center gap-2 md:gap-3">
+                        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Spark Laundry Logo"
+                            class="w-10 h-10 md:w-12 md:h-12 rounded-lg">
+                        <span class="font-extrabold text-lg md:text-2xl tracking-tight text-brand-dark">SPARK <span
+                                class="text-brand-blue">LAUNDRY</span></span>
+                    </a>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-brand-blue font-semibold transition">Home</a>
+                    <a href="/services"
+                        class="text-gray-700 hover:text-brand-blue font-semibold transition">Services</a>
+                    <a href="/pricing" class="text-gray-700 hover:text-brand-blue font-semibold transition">Pricing</a>
+                    <a href="/help" class="text-gray-700 hover:text-brand-blue font-semibold transition">Guide</a>
+                    <a href="/about" class="text-gray-700 hover:text-brand-blue font-semibold transition">About</a>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <div id="nav-guest" class="flex items-center space-x-3 md:space-x-4">
+                        <a href="/login"
+                            class="text-brand-blue font-bold hover:text-brand-dark transition text-sm md:text-base">Log
+                            In</a>
+                        <a href="/register"
+                            class="bg-brand-yellow text-brand-dark px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-sm md:text-base hover:bg-yellow-400 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap">
+                            Get Started
+                        </a>
+                    </div>
+                    <div id="nav-user" class="hidden flex items-center space-x-4">
+                        <a href="#" onclick="goToDashboard(event)"
+                            class="bg-brand-blue text-white px-6 py-3 rounded-full font-bold hover:bg-brand-dark transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            Dashboard <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Premium Footer -->
+    <footer class="bg-brand-dark text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Spark Laundry Logo"
+                        class="w-10 h-10 rounded-lg">
+                    <span class="font-bold text-xl">Spark Laundry</span>
+                </div>
+                <p class="text-blue-100 text-sm leading-relaxed">
+                    Premium laundry and dry cleaning delivered to your doorstep. We care for your clothes so you can
+                    care for yourself.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-4 text-brand-yellow">Services</h4>
+                <ul class="space-y-2 text-blue-100 text-sm">
+                    <li><a href="#" class="hover:text-white">Dry Cleaning</a></li>
+                    <li><a href="#" class="hover:text-white">Wash & Fold</a></li>
+                    <li><a href="#" class="hover:text-white">Ironing</a></li>
+                    <li><a href="#" class="hover:text-white">Shoe Cleaning</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-4 text-brand-yellow">Company</h4>
+                <ul class="space-y-2 text-blue-100 text-sm">
+                    <li><a href="#" class="hover:text-white">About Us</a></li>
+                    <li><a href="/about" class="hover:text-white">Contact</a></li>
+                    <li><a href="/help" class="hover:text-white">User Guide</a></li>
+                    <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-lg mb-4 text-brand-yellow">Newsletter</h4>
+                <div class="flex bg-white/10 rounded-lg p-1">
+                    <input type="email" placeholder="Your email"
+                        class="bg-transparent text-white px-3 py-2 outline-none w-full placeholder-blue-200 text-sm">
+                    <button class="bg-brand-yellow text-brand-dark px-4 py-2 rounded font-bold text-sm">Go</button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 border-t border-white/10 pt-8 text-center text-blue-200 text-sm">
+            <p>&copy; 2026 Spark Laundry. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

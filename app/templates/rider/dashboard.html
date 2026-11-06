@@ -1,0 +1,337 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rider App</p>
+<a href="/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+    <i class="fas fa-motorcycle w-5"></i> Tasks
+</a>
+<a href="#"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-map w-5"></i> Map View
+</a>
+<a href="#wallet-section"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-money-bill-wave w-5"></i> Earnings
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+    <h1 class="text-2xl font-extrabold text-brand-dark flex items-center gap-2">
+        Rider Dispatch
+    </h1>
+    <div class="flex items-center gap-3">
+        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+            <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-1"></span> Online
+        </span>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+    <!-- My Active Tasks -->
+    <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100 h-full">
+        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span class="w-8 h-8 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center text-sm"><i
+                    class="fas fa-tasks"></i></span>
+            My Active Tasks
+        </h2>
+        <div id="my-tasks" class="space-y-4">
+            <!-- Populated by JS -->
+            <div class="animate-pulse flex space-x-4">
+                <div class="flex-1 space-y-4 py-1">
+                    <div class="h-20 bg-gray-100 rounded"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Jobs -->
+    <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100 h-full">
+        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span
+                class="w-8 h-8 bg-yellow-100 text-brand-yellow rounded-full flex items-center justify-center text-sm"><i
+                    class="fas fa-map-marker-alt"></i></span>
+            Available Jobs nearby
+        </h2>
+        <div id="available-tasks" class="space-y-4">
+            <!-- Populated by JS -->
+            <p class="text-gray-400 text-sm text-center py-10">Searching for new requests...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Wallet Section -->
+<div id="wallet-section" class="mt-12 bg-white shadow-sm rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span
+                    class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm"><i
+                        class="fas fa-wallet"></i></span>
+                My Earnings
+            </h2>
+            <p class="text-xs text-gray-500 mt-1">Real-time commission and payout history.</p>
+        </div>
+        <div class="text-center md:text-right">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">Total Balance</span>
+            <span id="wallet-balance" class="text-3xl font-extrabold text-brand-dark font-mono">₦0.00</span>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Description
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="wallet-history" class="divide-y divide-gray-50 bg-white">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('access_token');
+
+    async function loadRiderData() {
+        if (!token) window.location.href = '/login';
+
+        // Load My Tasks
+        const myResp = await fetch('/api/rider/mytasks', { headers: { 'Authorization': 'Bearer ' + token } });
+        const myTasks = await myResp.json();
+        renderMyTasks(myTasks);
+
+        // Load Available Tasks
+        const availResp = await fetch('/api/rider/available', { headers: { 'Authorization': 'Bearer ' + token } });
+        const availTasks = await availResp.json();
+        renderAvailableTasks(availTasks);
+
+        // Load Wallet
+        try {
+            const walletResp = await fetch('/api/rider/wallet', { headers: { 'Authorization': 'Bearer ' + token } });
+            const walletData = await walletResp.json();
+            renderWallet(walletData);
+        } catch (e) { console.error('Wallet load failed', e); }
+    }
+
+    function renderWallet(data) {
+        document.getElementById('wallet-balance').textContent = '₦' + data.balance.toLocaleString();
+
+        const historyContainer = document.getElementById('wallet-history');
+        if (data.history.length === 0) {
+            historyContainer.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-400 text-sm">No transactions yet</td></tr>';
+            return;
+        }
+
+        historyContainer.innerHTML = data.history.map(tx => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">${new Date(tx.created_at).toLocaleDateString()}</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">${tx.description}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 text-xs font-bold rounded-full ${tx.type === 'EARNING' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${tx.type}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right text-sm font-mono font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${tx.amount > 0 ? '+' : ''}₦${Math.abs(tx.amount).toLocaleString()}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderMyTasks(tasks) {
+        const container = document.getElementById('my-tasks');
+        if (tasks.length === 0) {
+            container.innerHTML = `
+            <div class="text-center py-10 opacity-50">
+                <i class="fas fa-check-circle text-4xl text-gray-300 mb-2"></i>
+                <p class="text-gray-500 font-medium">No active tasks.</p>
+            </div>
+        `;
+            return;
+        }
+
+        container.innerHTML = tasks.map(task => {
+            let actionBtn = '';
+            if (task.status === 'Rider Assigned') {
+                actionBtn = `<button onclick="completeTask(${task.id})" class="w-full mt-4 bg-brand-blue text-white py-2 rounded-lg font-bold shadow hover:bg-brand-dark transition transform active:scale-95">Confirm Pickup</button>`;
+            } else if (task.status === 'Out for Delivery') {
+                actionBtn = `<button onclick="completeTask(${task.id})" class="w-full mt-4 bg-green-500 text-white py-2 rounded-lg font-bold shadow hover:bg-green-600 transition transform active:scale-95">Confirm Delivery</button>`;
+            } else {
+                actionBtn = `<div class="mt-4 bg-gray-50 text-gray-500 py-2 rounded-lg text-sm font-medium text-center border border-gray-200">Processing at Hub</div>`;
+            }
+
+            return `
+        <div class="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition bg-white relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-brand-blue"></div>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-lg">Order ${task.tracking_id}</h3>
+                    <p class="text-sm font-medium text-brand-blue mt-1 uppercase tracking-wide">${task.status}</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-brand-blue group-hover:text-white transition">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+            <button onclick="showRiderOrderDetails(${task.id}, event)" class="mt-4 w-full text-center text-xs font-bold text-gray-400 uppercase tracking-wider hover:text-brand-blue transition">View Details</button>
+        </div>
+        ${actionBtn}`;
+        }).join('');
+    }
+
+    function renderAvailableTasks(tasks) {
+        const container = document.getElementById('available-tasks');
+        if (tasks.length === 0) {
+            container.innerHTML = `
+            <div class="text-center py-10 opacity-50">
+                <i class="fas fa-search text-4xl text-gray-300 mb-2"></i>
+                <p class="text-gray-500 font-medium">No active jobs nearby.</p>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = tasks.map(task => `
+        <div class="border border-gray-200 rounded-xl p-5 hover:border-brand-yellow transition bg-white group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${task.status === 'Pending Pickup' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}">
+                            ${task.status === 'Pending Pickup' ? 'PICKUP' : 'DELIVERY'}
+                        </span>
+                        <span class="text-xs text-brand-dark font-bold truncate max-w-[100px]">${task.customer_name}</span>
+                    </div>
+                    <h3 class="font-bold text-gray-900 text-lg">Order ${task.tracking_id}</h3>
+                    <p class="text-brand-dark font-mono font-medium mt-1">₦${task.total_amount}</p>
+                </div>
+                <button onclick="acceptTask(${task.id})" class="bg-gray-900 text-white px-5 py-2 rounded-lg shadow font-medium text-sm hover:bg-brand-blue transition transform active:scale-95">
+                    Accept
+                </button>
+                <button onclick="showRiderOrderDetails(${task.id})" class="ml-2 bg-blue-50 text-brand-blue px-5 py-2 rounded-lg font-bold text-sm hover:bg-blue-100 transition">
+                    View
+                </button>
+            </div>
+        </div>
+    `).join('');
+    }
+
+    async function acceptTask(id) {
+        if (!confirm('Accept this job?')) return;
+        try {
+            const res = await fetch(`/api/rider/tasks/${id}/accept`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) loadRiderData();
+        } catch (e) { console.error(e); }
+    }
+
+    async function completeTask(id) {
+        if (!confirm('Mark this task as completed?')) return;
+        try {
+            const res = await fetch(`/api/rider/tasks/${id}/complete`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) loadRiderData();
+        } catch (e) { console.error(e); }
+    }
+
+    async function showRiderOrderDetails(orderId, event) {
+        if (event) event.stopPropagation(); // Prevent card click if needed
+
+        const token = localStorage.getItem('access_token');
+        const modal = document.getElementById('rider-details-modal');
+        const content = document.getElementById('rider-details-content');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        content.innerHTML = '<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i></div>';
+
+        try {
+            const res = await fetch(`/api/rider/tasks/${orderId}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const order = await res.json();
+
+            let itemsHtml = order.items.map(i => `
+                <div class="flex justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div>
+                        <span class="font-bold text-gray-800">${i.quantity}x ${i.item_name}</span>
+                        <div class="text-xs text-gray-500">${i.service_type}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-2xl font-bold text-brand-dark">Order ${order.tracking_id}</h3>
+                            <p class="text-sm text-gray-500">${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                        <span class="px-3 py-1 text-sm font-bold rounded-full bg-gray-100">${order.status}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer Info</h4>
+                    <p class="text-sm font-bold text-gray-900">${order.customer.email}</p>
+                    ${order.customer.profile && order.customer.profile.phone ? `<p class="text-sm text-gray-500"><i class="fas fa-phone mr-1"></i> ${order.customer.profile.phone}</p>` : ''}
+                </div>
+
+                ${order.pickup_address ? `
+                <div class="mb-6">
+                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pickup Location</h4>
+                     <p class="text-sm text-gray-800 bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                        ${order.pickup_address.street}, ${order.pickup_address.city}
+                     </p>
+                </div>
+                ` : ''}
+
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Items to Pickup</h4>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        ${itemsHtml}
+                        <div class="flex justify-between pt-4 mt-2 border-t border-gray-200 font-bold text-lg">
+                            <span>Estimated Revenue</span>
+                            <span class="text-brand-blue">₦${order.total_amount}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        } catch (e) {
+            content.innerHTML = '<p class="text-red-500 text-center">Failed to load details.</p>';
+        }
+    }
+
+    function closeRiderDetailsModal() {
+        document.getElementById('rider-details-modal').classList.add('hidden');
+        document.getElementById('rider-details-modal').classList.remove('flex');
+    }
+
+    loadRiderData();
+</script>
+
+<!-- Rider Details Modal -->
+<div id="rider-details-modal"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 overflow-y-auto flex-1" id="rider-details-content">
+            <!-- Content -->
+        </div>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <button onclick="closeRiderDetailsModal()"
+                class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

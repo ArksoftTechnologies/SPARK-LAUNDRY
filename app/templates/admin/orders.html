@@ -1,0 +1,804 @@
+{% extends "dashboard_base.html" %}
+
+{% block content %}
+<!-- ── Page Header ─────────────────────────────────────────────────────── -->
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-brand-dark">Order Management</h1>
+        <p class="text-gray-500 mt-1">View, create, assign riders, and manage payments.</p>
+    </div>
+    <button onclick="openCreateOrderModal()"
+        class="flex items-center gap-2 bg-brand-yellow text-brand-dark px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-yellow-400 transition transform hover:-translate-y-1">
+        <i class="fas fa-plus-circle"></i> Create Order for Customer
+    </button>
+</div>
+
+<!-- ── Orders Table ───────────────────────────────────────────────────────── -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Tracking ID</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Customer</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Rider</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Total</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Payment</th>
+                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table" class="divide-y divide-gray-200">
+                <tr><td colspan="7" class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL 1 — Order Details
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="details-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-brand-dark">Order Details</h3>
+            <button onclick="closeModal('details-modal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1" id="details-content"></div>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-between rounded-b-2xl">
+            <div class="flex gap-2">
+                <button id="btn-pay" onclick="" class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 text-sm hidden">
+                    <i class="fas fa-money-bill-wave mr-1"></i> Record Payment
+                </button>
+                <button id="btn-print" onclick="" class="px-4 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-brand-dark text-sm hidden">
+                    <i class="fas fa-print mr-1"></i> Print Receipt
+                </button>
+            </div>
+            <button onclick="closeModal('details-modal')" class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL 2 — Assign Rider
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="assign-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Assign Rider</h3>
+        <input type="hidden" id="assign-order-id">
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Rider</label>
+            <select id="rider-select" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue py-2 px-3"></select>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal('assign-modal')" class="text-gray-500 font-bold hover:text-gray-700 px-4 py-2">Cancel</button>
+            <button onclick="submitAssignment()" class="bg-brand-blue text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-dark">Assign</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL 3 — Record Payment
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="payment-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-brand-dark">Record Payment</h3>
+            <button onclick="closeModal('payment-modal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div class="p-6">
+            <input type="hidden" id="pay-order-id">
+            <!-- Summary -->
+            <div class="bg-blue-50 rounded-xl p-4 mb-5 text-sm">
+                <div class="flex justify-between mb-1"><span class="text-gray-500">Order Total</span><span class="font-bold" id="pay-total">₦0.00</span></div>
+                <div class="flex justify-between mb-1"><span class="text-gray-500">Amount Paid</span><span class="font-bold text-green-600" id="pay-paid">₦0.00</span></div>
+                <div class="flex justify-between border-t border-blue-100 pt-2 mt-2"><span class="font-bold">Balance Due</span><span class="font-extrabold text-brand-blue text-base" id="pay-balance">₦0.00</span></div>
+            </div>
+            <form id="payment-form" onsubmit="submitPayment(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Amount to Pay (₦)</label>
+                    <input type="number" id="pay-amount" step="0.01" min="0.01" required
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue font-bold text-lg">
+                    <p class="text-xs text-gray-400 mt-1">Enter any amount up to the balance. Part payments are allowed.</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Payment Method</label>
+                    <select id="pay-method" class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue">
+                        <option value="Cash">Cash</option>
+                        <option value="Transfer">Bank Transfer</option>
+                        <option value="POS">POS</option>
+                        <option value="Card">Card</option>
+                    </select>
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Note (Optional)</label>
+                    <input type="text" id="pay-note" placeholder="e.g. Part payment on pickup"
+                        class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue text-sm">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('payment-modal')" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg">Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL 4 — Print Receipt
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="print-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[95vh]">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-brand-dark">Print Receipt</h3>
+            <div class="flex items-center gap-3">
+                <!-- Paper size selector -->
+                <select id="paper-size" onchange="renderReceipt(currentReceiptOrder)"
+                    class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-brand-blue focus:border-brand-blue font-medium">
+                    <option value="80mm">80mm POS Roll</option>
+                    <option value="55mm">55mm POS Roll</option>
+                    <option value="A4">A4 Paper</option>
+                </select>
+                <button onclick="printReceipt()" class="bg-brand-blue text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-brand-dark">
+                    <i class="fas fa-print mr-1"></i> Print
+                </button>
+                <button onclick="closeModal('print-modal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 bg-gray-100">
+            <div id="receipt-preview" class="mx-auto"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODAL 5 — Create Order for Customer
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="create-order-modal" class="fixed inset-0 bg-gray-900/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[95vh]">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-brand-dark">Create Order for Customer</h3>
+            <button onclick="closeModal('create-order-modal')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1">
+            <form id="admin-order-form" onsubmit="submitAdminOrder(event)">
+
+                <!-- Step 1: Customer -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="bg-brand-blue text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs mr-2">1</span>Select Customer</label>
+                    <select id="co-customer" onchange="onCustomerChange()" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue">
+                        <option value="">-- Select Customer --</option>
+                    </select>
+                </div>
+
+                <!-- Step 2: Address -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="bg-brand-blue text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs mr-2">2</span>Pickup Address</label>
+                    <select id="co-address" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue mb-2">
+                        <option value="">-- Select address --</option>
+                    </select>
+                    <div id="new-address-block" class="hidden space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-200 mt-2">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Enter New Address</p>
+                        <input type="text" id="co-street" placeholder="Street" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-brand-blue focus:border-brand-blue">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="co-city" placeholder="City" class="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-brand-blue focus:border-brand-blue">
+                            <input type="text" id="co-state" placeholder="State" class="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-brand-blue focus:border-brand-blue">
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleNewAddress()" class="text-xs text-brand-blue font-bold mt-1 hover:underline">+ Use a different address</button>
+                </div>
+
+                <!-- Step 3: Items -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-3"><span class="bg-brand-blue text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs mr-2">3</span>Items</label>
+                    <div id="co-items-container" class="space-y-3"></div>
+                    <button type="button" onclick="addCoItem()"
+                        class="mt-3 w-full py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold hover:border-brand-blue hover:text-brand-blue transition text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <!-- Step 4: Pickup time -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2"><span class="bg-brand-blue text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs mr-2">4</span>Preferred Pickup Time (Optional)</label>
+                    <input type="datetime-local" id="co-pickup-time"
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-brand-blue focus:border-brand-blue">
+                </div>
+
+                <!-- Total -->
+                <div class="bg-brand-light rounded-xl p-4 flex justify-between items-center mb-4">
+                    <span class="font-bold text-brand-dark">Estimated Total</span>
+                    <span class="text-2xl font-extrabold text-brand-blue" id="co-total">₦0.00</span>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('create-order-modal')" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-brand-yellow text-brand-dark font-bold rounded-xl hover:bg-yellow-400 shadow-lg">Place Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PRINT STYLES
+════════════════════════════════════════════════════════════════════════════ -->
+<style>
+    @media print {
+        body > *:not(#print-frame-wrapper) { display: none !important; }
+        #print-frame-wrapper { display: block !important; }
+    }
+</style>
+<div id="print-frame-wrapper" style="display:none;"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════════════════════ -->
+<script>
+const token = () => localStorage.getItem('access_token');
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function openModal(id)  { const m = document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+function closeModal(id) { const m = document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+function fmtCurrency(n) { return '₦' + (parseFloat(n)||0).toLocaleString('en-NG', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function getStatusBadge(status) {
+    const map = {
+        'Pending Pickup':      'bg-yellow-100 text-yellow-800',
+        'Rider Assigned':      'bg-blue-100 text-blue-800',
+        'Picked Up':           'bg-indigo-100 text-indigo-800',
+        'Washing':             'bg-cyan-100 text-cyan-800',
+        'Drying':              'bg-sky-100 text-sky-800',
+        'Ironing':             'bg-purple-100 text-purple-800',
+        'Ready for Delivery':  'bg-teal-100 text-teal-800',
+        'Out for Delivery':    'bg-orange-100 text-orange-800',
+        'Delivered':           'bg-green-100 text-green-800',
+        'Cancelled':           'bg-red-100 text-red-800',
+    };
+    return map[status] || 'bg-gray-100 text-gray-800';
+}
+
+function getPayBadge(status) {
+    if (status === 'Paid')      return 'bg-green-100 text-green-700';
+    if (status === 'Part Paid') return 'bg-yellow-100 text-yellow-700';
+    return 'bg-red-100 text-red-600';
+}
+
+// ── Load Orders Table ───────────────────────────────────────────────────────
+async function loadOrders() {
+    try {
+        const res = await fetch('/api/admin/orders', { headers: { 'Authorization': 'Bearer ' + token() } });
+        const orders = await res.json();
+        const tbody = document.getElementById('orders-table');
+
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-400">No orders yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = orders.map(o => `
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-5 py-4 text-sm font-bold text-brand-blue whitespace-nowrap">
+                    ${o.tracking_id}
+                    ${o.created_by_admin ? '<span class="ml-1 text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">Admin</span>' : ''}
+                </td>
+                <td class="px-5 py-4 text-sm">
+                    <div class="font-bold text-gray-900">${o.customer_name || ''}</div>
+                    <div class="text-xs text-gray-400">${o.customer_email}</div>
+                </td>
+                <td class="px-5 py-4">
+                    <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${getStatusBadge(o.status)}">${o.status}</span>
+                </td>
+                <td class="px-5 py-4 text-sm text-gray-500">
+                    ${o.rider_email ? `<div class="font-medium">${o.rider_name||''}</div><div class="text-xs">${o.rider_email}</div>` : '<span class="text-orange-500 font-bold text-xs">Unassigned</span>'}
+                </td>
+                <td class="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">${fmtCurrency(o.total_amount)}</td>
+                <td class="px-5 py-4">
+                    <span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-full ${getPayBadge(o.payment_status)}">${o.payment_status||'Unpaid'}</span>
+                    <div class="text-xs text-gray-400 mt-0.5">Bal: ${fmtCurrency(o.balance_due)}</div>
+                </td>
+                <td class="px-5 py-4 text-sm font-medium whitespace-nowrap">
+                    <button onclick="openAssignModal(${o.id})" class="text-gray-500 hover:text-brand-blue font-bold mr-2 text-xs py-1 px-2 rounded hover:bg-gray-100">Assign</button>
+                    <button onclick="showOrderDetails(${o.id})" class="text-brand-blue hover:text-brand-dark font-bold text-xs bg-blue-50 px-3 py-1 rounded-full">View</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch(e) { console.error(e); }
+}
+
+// ── Order Details Modal ────────────────────────────────────────────────────
+let currentReceiptOrder = null;
+
+async function showOrderDetails(orderId) {
+    openModal('details-modal');
+    const content = document.getElementById('details-content');
+    content.innerHTML = '<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i></div>';
+    document.getElementById('btn-pay').classList.add('hidden');
+    document.getElementById('btn-print').classList.add('hidden');
+
+    try {
+        const res = await fetch(`/api/admin/orders/${orderId}`, { headers: { 'Authorization': 'Bearer ' + token() } });
+        const order = await res.json();
+        currentReceiptOrder = order;
+
+        const itemsHtml = order.items.map(i => `
+            <div class="flex justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
+                <div>
+                    <span class="font-bold text-gray-800">${i.quantity}x ${i.item_name}</span>
+                    <div class="text-xs text-gray-500 capitalize">${i.service_type}</div>
+                </div>
+                <div class="font-mono text-gray-700">${fmtCurrency(i.price * i.quantity)}</div>
+            </div>
+        `).join('');
+
+        const paymentsHtml = order.payments && order.payments.length ? order.payments.map(p => `
+            <div class="flex justify-between items-center py-1.5 text-sm border-b border-gray-50 last:border-0">
+                <div>
+                    <span class="font-medium">${p.payment_method}</span>
+                    <span class="text-xs text-gray-400 ml-2">${new Date(p.created_at).toLocaleDateString()}</span>
+                    ${p.note ? `<div class="text-xs text-gray-400">${p.note}</div>` : ''}
+                </div>
+                <div class="font-bold text-green-600">${fmtCurrency(p.amount)}</div>
+            </div>
+        `).join('') : '<p class="text-sm text-gray-400 py-2">No payments recorded yet.</p>';
+
+        content.innerHTML = `
+            <div class="mb-5 flex justify-between items-start">
+                <div>
+                    <h3 class="text-2xl font-bold text-brand-dark">${order.tracking_id}</h3>
+                    <p class="text-sm text-gray-500">${new Date(order.created_at).toLocaleString()}</p>
+                    <p class="text-sm text-gray-600 mt-1">${order.customer.email}</p>
+                </div>
+                <span class="px-3 py-1 text-sm font-bold rounded-full ${getStatusBadge(order.status)}">${order.status}</span>
+            </div>
+
+            <div class="mb-5">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Items</h4>
+                <div class="bg-gray-50 rounded-xl p-4">
+                    ${itemsHtml}
+                    <div class="flex justify-between pt-3 mt-2 border-t border-gray-200 font-bold text-base">
+                        <span>Order Total</span>
+                        <span class="text-brand-blue">${fmtCurrency(order.total_amount)}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${order.pickup_address ? `
+            <div class="mb-5">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pickup Address</h4>
+                <p class="text-sm text-gray-800 bg-gray-50 border border-gray-100 p-3 rounded-lg">
+                    <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                    ${order.pickup_address.street}, ${order.pickup_address.city}, ${order.pickup_address.state}
+                </p>
+            </div>` : ''}
+
+            <div class="mb-2">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment History</h4>
+                <div class="bg-gray-50 rounded-xl p-4">${paymentsHtml}</div>
+                <div class="flex justify-between mt-3 text-sm font-bold">
+                    <span class="text-gray-500">Amount Paid</span>
+                    <span class="text-green-600">${fmtCurrency(order.amount_paid)}</span>
+                </div>
+                <div class="flex justify-between mt-1 text-sm font-bold">
+                    <span class="text-gray-500">Balance Due</span>
+                    <span class="${order.balance_due > 0 ? 'text-red-500' : 'text-green-600'}">${fmtCurrency(order.balance_due)}</span>
+                </div>
+                <div class="flex justify-between mt-1 text-sm">
+                    <span class="text-gray-400">Payment Status</span>
+                    <span class="font-bold px-2 py-0.5 rounded-full text-xs ${getPayBadge(order.payment_status)}">${order.payment_status||'Unpaid'}</span>
+                </div>
+            </div>
+        `;
+
+        // Show action buttons
+        if ((order.balance_due || 0) > 0.01) {
+            const btnPay = document.getElementById('btn-pay');
+            btnPay.classList.remove('hidden');
+            btnPay.onclick = () => openPaymentModal(order);
+        }
+        const btnPrint = document.getElementById('btn-print');
+        btnPrint.classList.remove('hidden');
+        btnPrint.onclick = () => openPrintModal(order);
+
+    } catch(e) {
+        content.innerHTML = '<p class="text-red-500 text-center">Failed to load details.</p>';
+        console.error(e);
+    }
+}
+
+// ── Assign Rider Modal ─────────────────────────────────────────────────────
+async function loadRiders() {
+    const res = await fetch('/api/admin/riders', { headers: { 'Authorization': 'Bearer ' + token() } });
+    const riders = await res.json();
+    document.getElementById('rider-select').innerHTML = riders.map(r =>
+        `<option value="${r.id}">${r.profile?.full_name || r.email} (${r.email})</option>`
+    ).join('');
+}
+
+function openAssignModal(orderId) {
+    document.getElementById('assign-order-id').value = orderId;
+    openModal('assign-modal');
+    loadRiders();
+}
+
+async function submitAssignment() {
+    const orderId = document.getElementById('assign-order-id').value;
+    const riderId = document.getElementById('rider-select').value;
+
+    const res = await fetch(`/api/admin/orders/${orderId}/assign`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+        body: JSON.stringify({ rider_id: riderId })
+    });
+
+    if (res.ok) {
+        closeModal('assign-modal');
+        loadOrders();
+        alert('Rider assigned successfully!');
+    } else {
+        const err = await res.json();
+        alert(err.message || 'Failed to assign rider');
+    }
+}
+
+// ── Payment Modal ──────────────────────────────────────────────────────────
+function openPaymentModal(order) {
+    closeModal('details-modal');
+    document.getElementById('pay-order-id').value = order.id;
+    document.getElementById('pay-total').textContent    = fmtCurrency(order.total_amount);
+    document.getElementById('pay-paid').textContent     = fmtCurrency(order.amount_paid || 0);
+    document.getElementById('pay-balance').textContent  = fmtCurrency(order.balance_due || 0);
+    document.getElementById('pay-amount').max           = order.balance_due || 0;
+    document.getElementById('pay-amount').value         = '';
+    document.getElementById('pay-note').value           = '';
+    openModal('payment-modal');
+}
+
+async function submitPayment(e) {
+    e.preventDefault();
+    const orderId = document.getElementById('pay-order-id').value;
+    const amount  = parseFloat(document.getElementById('pay-amount').value);
+    const method  = document.getElementById('pay-method').value;
+    const note    = document.getElementById('pay-note').value;
+
+    const res = await fetch(`/api/admin/orders/${orderId}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+        body: JSON.stringify({ amount, payment_method: method, note })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+        closeModal('payment-modal');
+        loadOrders();
+        alert(`✅ Payment of ${fmtCurrency(amount)} recorded.\nBalance due: ${fmtCurrency(data.order_summary.balance_due)}`);
+        // Refresh order details
+        showOrderDetails(orderId);
+    } else {
+        alert(data.message || 'Payment failed');
+    }
+}
+
+// ── Print Receipt ──────────────────────────────────────────────────────────
+function openPrintModal(order) {
+    currentReceiptOrder = order;
+    openModal('print-modal');
+    renderReceipt(order);
+}
+
+function renderReceipt(order) {
+    if (!order) return;
+    const size = document.getElementById('paper-size').value;
+    const preview = document.getElementById('receipt-preview');
+
+    const itemRows = order.items.map(i => {
+        const subtotal = i.price * i.quantity;
+        if (size === 'A4') {
+            return `<tr>
+                <td style="padding:6px 8px;border-bottom:1px solid #eee;">${i.item_name}</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center;">${i.quantity}</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:left;font-size:11px;">${i.service_type}</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;">₦${i.price.toFixed(2)}</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;">₦${subtotal.toFixed(2)}</td>
+            </tr>`;
+        } else {
+            // POS format — compact
+            return `<div style="margin:2px 0;">${i.quantity}x ${i.item_name} (${i.service_type})<span style="float:right">₦${subtotal.toFixed(2)}</span></div>`;
+        }
+    }).join('');
+
+    const payRows = (order.payments||[]).map(p =>
+        size === 'A4'
+            ? `<tr><td style="padding:4px 8px;">${new Date(p.created_at).toLocaleDateString()}</td><td style="padding:4px 8px;">${p.payment_method}</td><td style="padding:4px 8px;text-align:right;">₦${(p.amount||0).toFixed(2)}</td></tr>`
+            : `<div style="margin:1px 0;">${p.payment_method} <span style="float:right">₦${(p.amount||0).toFixed(2)}</span></div>`
+    ).join('');
+
+    const customerName = order.customer?.profile?.full_name || order.customer?.email || 'N/A';
+    const pickupAddr = order.pickup_address
+        ? `${order.pickup_address.street}, ${order.pickup_address.city}`
+        : 'N/A';
+    const now = new Date().toLocaleString('en-NG');
+
+    if (size === 'A4') {
+        preview.innerHTML = `
+        <div id="receipt-a4" style="width:210mm;min-height:auto;background:#fff;padding:20mm 18mm;font-family:Arial,sans-serif;font-size:13px;color:#111;margin:0 auto;box-shadow:0 0 8px rgba(0,0,0,.15);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div>
+                    <div style="font-size:22px;font-weight:900;color:#004C99;letter-spacing:-0.5px;">SPARK LAUNDRY</div>
+                    <div style="font-size:11px;color:#555;margin-top:2px;">Premium Laundry & Dry Cleaning</div>
+                    <div style="font-size:11px;color:#555;">(+234) 915 740 6159 | support@sparklaundry.com</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px;color:#888;">RECEIPT</div>
+                    <div style="font-size:15px;font-weight:700;color:#0066CC;">${order.tracking_id}</div>
+                    <div style="font-size:11px;color:#888;">${now}</div>
+                </div>
+            </div>
+
+            <hr style="border:none;border-top:2px solid #0066CC;margin:10px 0;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:12px;">
+                <div><span style="color:#888;font-weight:600;">Customer:</span> ${customerName}</div>
+                <div><span style="color:#888;font-weight:600;">Email:</span> ${order.customer?.email || 'N/A'}</div>
+                <div><span style="color:#888;font-weight:600;">Pickup:</span> ${pickupAddr}</div>
+                <div><span style="color:#888;font-weight:600;">Status:</span> ${order.status}</div>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;">
+                <thead>
+                    <tr style="background:#e6f0fa;font-weight:700;">
+                        <th style="padding:8px;text-align:left;border-bottom:2px solid #0066CC;">Item</th>
+                        <th style="padding:8px;text-align:center;border-bottom:2px solid #0066CC;">Qty</th>
+                        <th style="padding:8px;border-bottom:2px solid #0066CC;">Service</th>
+                        <th style="padding:8px;text-align:right;border-bottom:2px solid #0066CC;">Unit</th>
+                        <th style="padding:8px;text-align:right;border-bottom:2px solid #0066CC;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>${itemRows}</tbody>
+                <tfoot>
+                    <tr style="font-weight:700;font-size:13px;">
+                        <td colspan="4" style="padding:8px;text-align:right;border-top:2px solid #0066CC;">TOTAL</td>
+                        <td style="padding:8px;text-align:right;border-top:2px solid #0066CC;color:#0066CC;">₦${(order.total_amount||0).toFixed(2)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            ${order.payments && order.payments.length ? `
+            <div style="margin-bottom:14px;">
+                <div style="font-weight:700;font-size:12px;margin-bottom:4px;color:#004C99;">Payment History</div>
+                <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                    <thead><tr style="background:#f9fafb;"><th style="padding:4px 8px;text-align:left;">Date</th><th style="padding:4px 8px;text-align:left;">Method</th><th style="padding:4px 8px;text-align:right;">Amount</th></tr></thead>
+                    <tbody>${payRows}</tbody>
+                </table>
+            </div>` : ''}
+
+            <div style="background:#f0f4ff;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                <div><span style="color:#555;">Amount Paid:</span> <strong style="color:#16a34a;">₦${(order.amount_paid||0).toFixed(2)}</strong></div>
+                <div><span style="color:#555;">Balance Due:</span> <strong style="color:${(order.balance_due||0)>0?'#dc2626':'#16a34a'}">₦${(order.balance_due||0).toFixed(2)}</strong></div>
+                <div><span style="color:#555;">Status:</span> <strong>${order.payment_status||'Unpaid'}</strong></div>
+            </div>
+
+            <div style="margin-top:24px;text-align:center;font-size:11px;color:#888;">
+                <div>Thank you for choosing Spark Laundry!</div>
+                <div>© 2026 Spark Laundry | Premium Care for Your Premium Wear</div>
+            </div>
+        </div>`;
+    } else {
+        // POS receipt — 80mm or 55mm
+        const w = size === '80mm' ? '72mm' : '48mm';
+        const fs = size === '80mm' ? '12px' : '10px';
+        const fsSm = size === '80mm' ? '10px' : '9px';
+
+        preview.innerHTML = `
+        <div id="receipt-pos" style="width:${w};background:#fff;padding:6px 8px;font-family:'Courier New',monospace;font-size:${fs};color:#000;margin:0 auto;box-shadow:0 0 6px rgba(0,0,0,.2);">
+            <div style="text-align:center;font-weight:900;font-size:${size==='80mm'?'15px':'12px'};letter-spacing:1px;">SPARK LAUNDRY</div>
+            <div style="text-align:center;font-size:${fsSm};">Premium Laundry & Dry Cleaning</div>
+            <div style="text-align:center;font-size:${fsSm};">(+234) 915 740 6159</div>
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="font-size:${fsSm};">Receipt: <b>${order.tracking_id}</b></div>
+            <div style="font-size:${fsSm};">${now}</div>
+            <div style="font-size:${fsSm};">Customer: ${customerName}</div>
+            <div style="font-size:${fsSm};">Address: ${pickupAddr}</div>
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="font-weight:700;font-size:${fsSm};margin-bottom:2px;">ITEMS</div>
+            ${itemRows}
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="font-weight:700;">TOTAL<span style="float:right">₦${(order.total_amount||0).toFixed(2)}</span></div>
+            ${order.payments && order.payments.length ? `
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="font-size:${fsSm};font-weight:700;margin-bottom:2px;">PAYMENTS</div>
+            ${payRows}` : ''}
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="font-size:${fsSm};">Paid: <b>₦${(order.amount_paid||0).toFixed(2)}</b></div>
+            <div style="font-size:${fsSm};">Balance: <b>₦${(order.balance_due||0).toFixed(2)}</b></div>
+            <div style="font-size:${fsSm};">Status: <b>${order.payment_status||'Unpaid'}</b></div>
+            <div style="border-top:1px dashed #000;margin:5px 0;"></div>
+            <div style="text-align:center;font-size:${fsSm};">Thank you!</div>
+            <div style="text-align:center;font-size:${fsSm};">© 2026 Spark Laundry</div>
+            <div style="height:16px;"></div>
+        </div>`;
+    }
+}
+
+function printReceipt() {
+    const receiptHtml = document.getElementById('receipt-preview').innerHTML;
+    const size = document.getElementById('paper-size').value;
+
+    let pageSize = 'A4';
+    if (size === '80mm') pageSize = '80mm 200mm';
+    if (size === '55mm') pageSize = '55mm 200mm';
+
+    const win = window.open('', '_blank', 'width=700,height=600');
+    win.document.write(`<!DOCTYPE html><html><head>
+        <style>
+            @page { size: ${pageSize}; margin: 0; }
+            body { margin: 0; padding: 0; }
+        </style>
+    </head><body>${receiptHtml}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 400);
+}
+
+// ── Create Order for Customer ───────────────────────────────────────────────
+let allCustomers = [];
+let allItems = [];
+
+async function openCreateOrderModal() {
+    openModal('create-order-modal');
+    document.getElementById('admin-order-form').reset();
+    document.getElementById('co-items-container').innerHTML = '';
+    document.getElementById('co-total').textContent = '₦0.00';
+    document.getElementById('new-address-block').classList.add('hidden');
+
+    // Load customers and items in parallel
+    const [custRes, itemsRes] = await Promise.all([
+        fetch('/api/admin/customers', { headers: { 'Authorization': 'Bearer ' + token() } }),
+        fetch('/api/admin/items',     { headers: { 'Authorization': 'Bearer ' + token() } })
+    ]);
+
+    allCustomers = await custRes.json();
+    allItems     = await itemsRes.json();
+
+    // Populate customer dropdown
+    const custSel = document.getElementById('co-customer');
+    custSel.innerHTML = '<option value="">-- Select Customer --</option>' +
+        allCustomers.map(c => `<option value="${c.id}">${c.profile?.full_name || c.email} (${c.email})</option>`).join('');
+
+    // Add first item row
+    addCoItem();
+}
+
+function onCustomerChange() {
+    const customerId = document.getElementById('co-customer').value;
+    const customer   = allCustomers.find(c => c.id == customerId);
+    const addrSel    = document.getElementById('co-address');
+
+    if (customer && customer.addresses && customer.addresses.length) {
+        addrSel.innerHTML = customer.addresses.map(a =>
+            `<option value="${a.id}">${a.street}, ${a.city}</option>`
+        ).join('');
+    } else {
+        addrSel.innerHTML = '<option value="">No saved addresses</option>';
+    }
+}
+
+function toggleNewAddress() {
+    const block = document.getElementById('new-address-block');
+    block.classList.toggle('hidden');
+}
+
+function addCoItem() {
+    const container = document.getElementById('co-items-container');
+    const div = document.createElement('div');
+    div.className = 'co-item-row grid grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border border-gray-100';
+    div.innerHTML = `
+        <div class="col-span-12 sm:col-span-5">
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Item</label>
+            <select class="co-item-sel block w-full rounded-lg border-gray-300 shadow-sm focus:ring-brand-blue focus:border-brand-blue text-sm" onchange="calcCoTotal()">
+                <option value="">Select</option>
+                ${allItems.map(i => `<option value="${i.id}" data-wash="${i.price_wash}" data-dryclean="${i.price_dryclean}" data-iron="${i.price_iron}">${i.name}</option>`).join('')}
+            </select>
+        </div>
+        <div class="col-span-4 sm:col-span-2">
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Qty</label>
+            <input type="number" class="co-qty block w-full rounded-lg border-gray-300 shadow-sm text-center text-sm" min="1" value="1" onchange="calcCoTotal()">
+        </div>
+        <div class="col-span-8 sm:col-span-3">
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Service</label>
+            <select class="co-svc block w-full rounded-lg border-gray-300 shadow-sm focus:ring-brand-blue focus:border-brand-blue text-sm" onchange="calcCoTotal()">
+                <option value="wash">Wash & Fold</option>
+                <option value="dryclean">Dry Clean</option>
+                <option value="iron">Iron Only</option>
+            </select>
+        </div>
+        <div class="col-span-12 sm:col-span-2">
+            <button type="button" onclick="this.closest('.co-item-row').remove(); calcCoTotal();"
+                class="w-full h-9 bg-white border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition flex items-center justify-center text-sm">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function calcCoTotal() {
+    let total = 0;
+    document.querySelectorAll('.co-item-row').forEach(row => {
+        const sel = row.querySelector('.co-item-sel');
+        const opt = sel.options[sel.selectedIndex];
+        if (!opt || !opt.value) return;
+        const svc = row.querySelector('.co-svc').value;
+        const qty = parseInt(row.querySelector('.co-qty').value) || 0;
+        const price = parseFloat(opt.dataset[svc]) || 0;
+        total += price * qty;
+    });
+    document.getElementById('co-total').textContent = fmtCurrency(total);
+}
+
+async function submitAdminOrder(e) {
+    e.preventDefault();
+
+    const customerId  = document.getElementById('co-customer').value;
+    const pickupTime  = document.getElementById('co-pickup-time').value;
+    const newAddrOpen = !document.getElementById('new-address-block').classList.contains('hidden');
+
+    // Build items
+    const items = [];
+    let valid = true;
+    document.querySelectorAll('.co-item-row').forEach(row => {
+        const sel = row.querySelector('.co-item-sel');
+        const opt = sel.options[sel.selectedIndex];
+        if (!opt || !opt.value) { valid = false; return; }
+        const svc = row.querySelector('.co-svc').value;
+        const qty = parseInt(row.querySelector('.co-qty').value) || 1;
+        const price = parseFloat(opt.dataset[svc]) || 0;
+        const itemObj = allItems.find(i => i.id == opt.value);
+        items.push({ item_name: itemObj.name, quantity: qty, service_type: svc, price });
+    });
+
+    if (!valid || items.length === 0) { alert('Please select at least one item.'); return; }
+    if (!customerId) { alert('Please select a customer.'); return; }
+
+    let body = { customer_id: customerId, items, pickup_time: pickupTime || null };
+
+    if (newAddrOpen) {
+        const street = document.getElementById('co-street').value.trim();
+        const city   = document.getElementById('co-city').value.trim();
+        const state  = document.getElementById('co-state').value.trim();
+        if (!street || !city || !state) { alert('Please fill in the address fields.'); return; }
+        body.address = { street, city, state };
+    } else {
+        const addrId = document.getElementById('co-address').value;
+        if (!addrId) { alert('Please select a pickup address.'); return; }
+        body.pickup_address_id = parseInt(addrId);
+    }
+
+    try {
+        const res = await fetch('/api/admin/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            closeModal('create-order-modal');
+            loadOrders();
+            alert(`✅ Order ${data.tracking_id} created successfully for customer!`);
+        } else {
+            alert(data.message || 'Failed to create order');
+        }
+    } catch(err) {
+        console.error(err);
+        alert('Error creating order');
+    }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadOrders();
+</script>
+{% endblock %}

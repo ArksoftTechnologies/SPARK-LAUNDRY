@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-brand-accent min-h-screen">
+    <!-- Hero Section -->
+    <div class="bg-brand-dark text-white py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
+                Our <span class="text-brand-yellow">Story</span>
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                Dedicated to making your life easier, one clean garment at a time.
+            </p>
+        </div>
+        <!-- Decorative blobs -->
+        <div
+            class="absolute top-0 left-0 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2">
+        </div>
+        <div
+            class="absolute bottom-0 right-0 w-96 h-96 bg-brand-yellow/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2">
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 -mt-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
+            <div class="bg-white rounded-3xl shadow-xl p-8 relative overflow-hidden group">
+                <div class="w-full h-80 rounded-2xl overflow-hidden">
+                    <img src="{{ url_for('static', filename='img/about_us.png') }}" alt="Spark Laundry Team"
+                        class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700">
+                </div>
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold text-brand-dark mb-6">About Spark Laundry</h2>
+                <div class="space-y-4 text-gray-600 leading-relaxed">
+                    <p>
+                        Spark Laundry was born from a simple idea: that laundry shouldn't be a chore that consumes your
+                        weekend. We wanted to create a service that combines professional cleaning quality with the
+                        modern convenience of digital booking and delivery.
+                    </p>
+                    <p>
+                        Since our launch, we've helped thousands of busy professionals, families, and businesses reclaim
+                        their time. We believe that looking your best shouldn't be hard work.
+                    </p>
+                    <p>
+                        Our team of experienced cleaning professionals treats every garment with the utmost care,
+                        inspecting for stains, buttons, and fabric requirements before cleaning.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission & Values -->
+        <div class="mb-24">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-brand-dark mb-4">Our Mission</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    To deliver impeccable laundry services that empower our customers to focus on what matters most to
+                    them.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <div
+                        class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-brand-blue text-2xl mb-6">
+                        🌟
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Quality First</h4>
+                    <p class="text-gray-600 text-sm">We use premium, eco-friendly detergents and state-of-the-art
+                        equipment to ensure the best results.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <div
+                        class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center text-brand-yellow text-2xl mb-6">
+                        ⚡
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Convenience</h4>
+                    <p class="text-gray-600 text-sm">Book pickups, track orders, and pay seamlessly through our
+                        easy-to-use platform.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <div
+                        class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-2xl mb-6">
+                        🛡️
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900 mb-3">Trust</h4>
+                    <p class="text-gray-600 text-sm">Your clothes are safe with us. We treat every item as if it were
+                        our own.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team / Contact CTA -->
+        <div class="bg-brand-blue rounded-3xl p-12 text-center text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <h2 class="text-3xl font-bold mb-6">Have Questions?</h2>
+                <p class="text-blue-100 mb-8 max-w-2xl mx-auto">
+                    Our support team is here to help with any inquiries you may have.
+                </p>
+                <div
+                    class="inline-flex flex-col sm:flex-row gap-8 items-center justify-center bg-white/10 rounded-2xl p-8 backdrop-blur-sm">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-brand-blue text-xl">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs text-blue-200 uppercase tracking-wider font-bold">Call Us</p>
+                            <p class="font-bold text-lg">(234) 800-LAUNDRY</p>
+                        </div>
+                    </div>
+                    <div class="w-px h-12 bg-white/20 hidden sm:block"></div>
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-brand-blue text-xl">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-xs text-blue-200 uppercase tracking-wider font-bold">Email Us</p>
+                            <p class="font-bold text-lg">support@sparklaundry.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative blobs -->
+            <div
+                class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 w-64 h-64 bg-brand-yellow/20 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

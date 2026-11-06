@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-brand-accent min-h-screen">
+    <!-- Hero Section -->
+    <div class="bg-brand-dark text-white py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
+                Our <span class="text-brand-yellow">Premium Services</span>
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                From everyday wear to delicate fabrics, we provide expert care for all your garments.
+            </p>
+        </div>
+        <!-- Decorative blobs -->
+        <div
+            class="absolute top-0 right-0 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-96 h-96 bg-brand-yellow/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2">
+        </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 -mt-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Wash & Fold -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 transform hover:-translate-y-2 transition-transform duration-300">
+                <div
+                    class="w-16 h-16 bg-brand-light rounded-2xl flex items-center justify-center text-3xl mb-6 text-brand-blue">
+                    🧺
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Wash & Fold</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Perfect for your everyday laundry. We separate lights and darks, wash with premium detergents, dry,
+                    and fold your clothes neatly.
+                </p>
+                <ul class="space-y-3 text-sm text-gray-500 mb-8">
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Everyday wear</li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Bed sheets & towels
+                    </li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Crisp folding</li>
+                </ul>
+                <a href="/pricing"
+                    class="text-brand-blue font-bold hover:text-brand-dark transition group flex items-center">
+                    Check Prices <i
+                        class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- Dry Cleaning -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 transform hover:-translate-y-2 transition-transform duration-300 border-2 border-brand-yellow/20">
+                <div
+                    class="absolute top-0 right-0 bg-brand-yellow text-brand-dark text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">
+                    POPULAR</div>
+                <div
+                    class="w-16 h-16 bg-brand-yellow/10 rounded-2xl flex items-center justify-center text-3xl mb-6 text-brand-dark">
+                    👔
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Dry Cleaning</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Expert care for your delicate items using eco-friendly solvents. Ideal for suits, dresses, coats,
+                    and fabrics that require special attention.
+                </p>
+                <ul class="space-y-3 text-sm text-gray-500 mb-8">
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Suits & Formal wear
+                    </li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Delicate fabrics
+                        (Silk, Wool)</li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Stain removal</li>
+                </ul>
+                <a href="/pricing"
+                    class="text-brand-blue font-bold hover:text-brand-dark transition group flex items-center">
+                    Check Prices <i
+                        class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- Ironing Service -->
+            <div
+                class="bg-white rounded-2xl shadow-xl p-8 transform hover:-translate-y-2 transition-transform duration-300">
+                <div
+                    class="w-16 h-16 bg-brand-light rounded-2xl flex items-center justify-center text-3xl mb-6 text-brand-blue">
+                    ♨️
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Iron Only</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Look sharp with our professional ironing and steaming service. We ensure your clothes are crisp,
+                    wrinkle-free, and ready to wear.
+                </p>
+                <ul class="space-y-3 text-sm text-gray-500 mb-8">
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Shirts & Blouses</li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Trousers</li>
+                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Hand finishing</li>
+                </ul>
+                <a href="/pricing"
+                    class="text-brand-blue font-bold hover:text-brand-dark transition group flex items-center">
+                    Check Prices <i
+                        class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- How it Works -->
+        <div class="mt-24">
+            <h2 class="text-3xl font-bold text-center text-brand-dark mb-16">How Spark Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl text-brand-blue mx-auto mb-6 group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
+                        1</div>
+                    <h4 class="font-bold text-xl mb-3">Schedule</h4>
+                    <p class="text-gray-600 text-sm">Book a pickup online or via our app in seconds.</p>
+                </div>
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl text-brand-blue mx-auto mb-6 group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
+                        2</div>
+                    <h4 class="font-bold text-xl mb-3">Pickup</h4>
+                    <p class="text-gray-600 text-sm">Our rider collects your bag from your doorstep.</p>
+                </div>
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl text-brand-blue mx-auto mb-6 group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
+                        3</div>
+                    <h4 class="font-bold text-xl mb-3">Clean</h4>
+                    <p class="text-gray-600 text-sm">We wash, dry, and fold with expert care.</p>
+                </div>
+                <div class="text-center group">
+                    <div
+                        class="w-20 h-20 bg-white shadow-lg rounded-full flex items-center justify-center text-2xl text-brand-blue mx-auto mb-6 group-hover:bg-brand-blue group-hover:text-white transition-colors duration-300">
+                        4</div>
+                    <h4 class="font-bold text-xl mb-3">Deliver</h4>
+                    <p class="text-gray-600 text-sm">Fresh, clean clothes delivered back to you in 24h.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bg-gray-50 py-16 text-center border-t border-gray-200">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-brand-dark mb-6">Ready for Fresh Laundry?</h2>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="/register"
+                    class="inline-block bg-brand-blue text-white px-8 py-4 rounded-xl font-bold hover:bg-brand-dark transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                    Book a Pickup
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
+<a href="/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+    <i class="fas fa-home w-5"></i> Dashboard
+</a>
+<a href="/create-order"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-plus-circle w-5"></i> New Order
+</a>
+<a href="#"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-history w-5"></i> Order History
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-extrabold text-brand-dark">My Dashboard</h1>
+        <p class="text-gray-500 mt-1">Welcome back! Here's your laundry overview.</p>
+    </div>
+    <a href="/create-order"
+        class="flex items-center gap-2 bg-brand-yellow text-brand-dark px-6 py-3 rounded-full font-bold shadow-lg hover:bg-yellow-400 transition transform hover:-translate-y-1">
+        <i class="fas fa-plus-circle"></i> New Order
+    </a>
+</div>
+
+<!-- Active Orders Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-blue-50 text-brand-blue rounded-xl flex items-center justify-center text-xl">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 font-medium text-sm uppercase tracking-wide">Active Orders</h3>
+                <p class="text-3xl font-bold text-gray-900 mt-1" id="active-count">-</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 font-medium text-sm uppercase tracking-wide">Completed</h3>
+                <p class="text-3xl font-bold text-gray-900 mt-1" id="completed-count">-</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-yellow-50 text-brand-yellow rounded-xl flex items-center justify-center text-xl">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 font-medium text-sm uppercase tracking-wide">Wallet Balance</h3>
+                <p class="text-3xl font-bold text-gray-900 mt-1">₦0.00</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-900">Recent Orders</h3>
+        <button onclick="loadDashboard()" class="text-brand-blue hover:text-brand-dark text-sm font-medium"><i
+                class="fas fa-sync-alt mr-1"></i> Refresh</button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50/50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Order ID
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="orders-table-body">
+                <!-- Loaded via JS -->
+            </tbody>
+        </table>
+    </div>
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden p-16 text-center">
+        <div
+            class="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900">No orders yet</h3>
+        <p class="mt-2 text-gray-500 max-w-sm mx-auto">Get started by scheduling your first pickup. We'll handle the
+            rest.</p>
+        <a href="/create-order" class="mt-6 inline-block text-brand-blue font-bold hover:underline">Create Order</a>
+    </div>
+</div>
+
+<script>
+    async function loadDashboard() {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/customer/orders', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const orders = await response.json();
+            const tableBody = document.getElementById('orders-table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            tableBody.innerHTML = ''; // Clear previous
+
+            let active = 0;
+            let completed = 0;
+
+            if (orders.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                orders.forEach(order => {
+                    if (['Delivered', 'Cancelled'].includes(order.status)) {
+                        completed++;
+                    } else {
+                        active++;
+                    }
+
+                    const row = `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-brand-blue">${order.tracking_id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(order.created_at).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${getStatusColor(order.status)}">
+                                ${order.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">₦${order.total_amount.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="showOrderDetails(${order.id})" class="text-brand-blue hover:text-brand-dark font-bold text-xs bg-blue-50 px-3 py-1 rounded-full">View</button>
+                        </td>
+                    </tr>
+                `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            document.getElementById('active-count').textContent = active;
+            document.getElementById('completed-count').textContent = completed;
+
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
+
+    function getStatusColor(status) {
+        switch (status) {
+            case 'Pending Pickup': return 'bg-yellow-100 text-yellow-800';
+            case 'Completed':
+            case 'Delivered': return 'bg-green-100 text-green-800';
+            case 'Cancelled': return 'bg-red-100 text-red-800';
+            case 'Washing':
+            case 'Ironing': return 'bg-blue-100 text-blue-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    // Modal Logic
+    async function showOrderDetails(orderId) {
+        const token = localStorage.getItem('access_token');
+        const modal = document.getElementById('details-modal');
+        const content = document.getElementById('details-content');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        content.innerHTML = '<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i></div>';
+
+        try {
+            const res = await fetch(`/api/customer/orders/${orderId}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const order = await res.json();
+
+            let itemsHtml = order.items.map(i => `
+                <div class="flex justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div>
+                        <span class="font-bold text-gray-800">${i.quantity}x ${i.item_name}</span>
+                        <div class="text-xs text-gray-500">${i.service_type}</div>
+                    </div>
+                    <div class="font-mono text-gray-700">₦${i.price}</div>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-2xl font-bold text-brand-dark">Order ${order.tracking_id}</h3>
+                            <p class="text-sm text-gray-500">${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                        <span class="px-3 py-1 text-sm font-bold rounded-full ${getStatusColor(order.status)}">${order.status}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Items</h4>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        ${itemsHtml}
+                        <div class="flex justify-between pt-4 mt-2 border-t border-gray-200 font-bold text-lg">
+                            <span>Total</span>
+                            <span class="text-brand-blue">₦${order.total_amount}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${order.pickup_address ? `
+                <div>
+                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pickup Location</h4>
+                     <p class="text-sm text-gray-800 bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                        ${order.pickup_address.street}, ${order.pickup_address.city}
+                     </p>
+                </div>
+                ` : ''}
+            `;
+
+        } catch (e) {
+            content.innerHTML = '<p class="text-red-500 text-center">Failed to load details.</p>';
+        }
+    }
+
+    function closeDetailsModal() {
+        document.getElementById('details-modal').classList.add('hidden');
+        document.getElementById('details-modal').classList.remove('flex');
+    }
+
+    loadDashboard();
+</script>
+
+<!-- Shared Details Modal -->
+<div id="details-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 overflow-y-auto flex-1" id="details-content">
+            <!-- Content -->
+        </div>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <button onclick="closeDetailsModal()"
+                class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

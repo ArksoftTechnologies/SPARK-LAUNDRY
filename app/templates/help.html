@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-brand-accent min-h-screen">
+    <!-- Hero Section -->
+    <div class="bg-brand-dark text-white py-16 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">
+                User <span class="text-brand-yellow">Guide</span>
+            </h1>
+            <p class="text-lg text-blue-100 max-w-2xl mx-auto">
+                Everything you need to know to use Spark Laundry.
+            </p>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 -mt-8">
+
+        <!-- Registration Guide -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 mb-12 relative z-10">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-brand-light rounded-full flex items-center justify-center text-brand-blue text-sm mr-4">1</span>
+                Getting Started
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4 text-gray-600">
+                    <p>To start using our services, you'll need to create an account.</p>
+                    <ol class="list-decimal list-inside space-y-2 ml-2">
+                        <li>Click <strong>Get Started</strong> or <strong>Log In</strong> in the top menu.</li>
+                        <li>Fill in your details (Name, Email, Password).</li>
+                        <li>Once registered, you'll be redirected to your personal dashboard.</li>
+                    </ol>
+                </div>
+                <div class="rounded-xl overflow-hidden shadow-md h-auto">
+                    <img src="{{ url_for('static', filename='img/guide_register.png') }}" alt="Registration Guide"
+                        class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Guide -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 mb-12 relative z-10">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-brand-light rounded-full flex items-center justify-center text-brand-blue text-sm mr-4">2</span>
+                Using the Dashboard
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="order-2 md:order-1 rounded-xl overflow-hidden shadow-md h-auto">
+                    <img src="{{ url_for('static', filename='img/guide_dashboard.png') }}" alt="Dashboard Guide"
+                        class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="space-y-4 text-gray-600 order-1 md:order-2">
+                    <p>Your dashboard is the command center.</p>
+                    <ul class="list-disc list-inside space-y-2 ml-2">
+                        <li><strong>Overview:</strong> See recent orders and status.</li>
+                        <li><strong>New Order:</strong> Quickly book a pickup.</li>
+                        <li><strong>History:</strong> View past transactions.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Guide -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 mb-12 relative z-10">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6 flex items-center">
+                <span
+                    class="w-8 h-8 bg-brand-light rounded-full flex items-center justify-center text-brand-blue text-sm mr-4">3</span>
+                Placing an Order
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4 text-gray-600">
+                    <p>Ready to wash?</p>
+                    <ol class="list-decimal list-inside space-y-2 ml-2">
+                        <li>Click <strong>New Order</strong> in the sidebar.</li>
+                        <li>Select items or choose "Bulk Wash".</li>
+                        <li>Pick a date and time for pickup.</li>
+                        <li>Confirm your address and submit!</li>
+                    </ol>
+                </div>
+                <div class="rounded-xl overflow-hidden shadow-md h-auto">
+                    <img src="{{ url_for('static', filename='img/guide_booking.png') }}" alt="Booking Guide"
+                        class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ CTA -->
+        <div class="text-center">
+            <p class="text-gray-500 mb-4">Still have questions?</p>
+            <a href="/about" class="text-brand-blue font-bold hover:underline">Contact Support</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

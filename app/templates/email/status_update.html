@@ -1,0 +1,19 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<h2>Order Status Update 🚚</h2>
+<p>Hello <strong>{{ order.customer.profile.full_name }}</strong>,</p>
+
+<p>Good news! Your order <span class="highlight">#{{ order.tracking_id }}</span> status has been updated.</p>
+
+<div style="text-align: center; margin: 30px 0;">
+    <span
+        style="font-size: 24px; font-weight: bold; color: #0066CC; padding: 10px 20px; border: 2px dashed #0066CC; border-radius: 50px;">
+        {{ order.status }}
+    </span>
+</div>
+
+<p>Keep an eye out for further updates!</p>
+
+<a href="{{ url_for('web.dashboard', _external=True) }}" class="button">View Order Details</a>
+{% endblock %}

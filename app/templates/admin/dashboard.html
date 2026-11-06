@@ -1,0 +1,338 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
+<a href="/admin/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+    <i class="fas fa-chart-line w-5"></i> Analytics
+</a>
+<a href="/admin/orders"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-clipboard-list w-5"></i> Orders
+</a>
+<a href="/admin/items"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-tags w-5"></i> Products & Prices
+</a>
+<a href="/admin/users"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-users w-5"></i> Users
+</a>
+<a href="/admin/finance"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-wallet w-5"></i> Finance
+</a>
+<a href="/admin/reports"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-chart-bar w-5"></i> Reports
+</a>
+<a href="/admin/settings"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-cog w-5"></i> Settings
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold flex items-center gap-3 text-brand-dark">
+        Admin Overview
+    </h1>
+    <p class="text-gray-500 mt-2">System performance and analytics.</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-brand-blue to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+        <h3 class="font-bold text-xs uppercase tracking-wider mb-2 text-blue-100">Total Revenue Collected</h3>
+        <p class="text-4xl font-extrabold" id="total-revenue">₦0.00</p>
+        <div class="mt-2 text-xs text-blue-200">All-time payments received</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Today's Revenue</h3>
+        <p class="text-3xl font-extrabold text-green-600" id="today-revenue">₦0.00</p>
+        <div class="mt-2 text-xs text-gray-400">Payments received today</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">This Month</h3>
+        <p class="text-3xl font-extrabold text-purple-600" id="month-revenue">₦0.00</p>
+        <div class="mt-2 text-xs text-gray-400">Current month collections</div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Outstanding Balance</h3>
+        <p class="text-3xl font-extrabold text-orange-500" id="outstanding">₦0.00</p>
+        <div class="mt-2 text-xs text-gray-400">Unpaid / part-paid orders</div>
+    </div>
+</div>
+
+<!-- Secondary KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition transform hover:-translate-y-1">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Total Orders</h3>
+        <p class="text-4xl font-extrabold text-brand-blue" id="total-orders">-</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition transform hover:-translate-y-1">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Total Users</h3>
+        <p class="text-4xl font-extrabold text-purple-600" id="total-users">-</p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition transform hover:-translate-y-1">
+        <h3 class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Total Riders</h3>
+        <div class="flex items-end justify-between">
+            <p class="text-4xl font-extrabold text-brand-yellow" id="total-riders">-</p>
+            <span class="text-sm bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded">Registered</span>
+        </div>
+    </div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="bg-white shadow-sm rounded-2xl p-8 mb-8 border border-gray-100">
+    <h2 class="text-xl font-bold text-gray-900 mb-6">Order Status Funnel</h2>
+    <div class="flex justify-between items-center gap-4 overflow-x-auto pb-4" id="status-grid">
+        <!-- Populated by JS -->
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100 mb-8">
+    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-900">Recent Orders</h3>
+        <a href="/admin/orders" class="text-brand-blue font-medium text-sm hover:underline">View All</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Tracking ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Customer</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Amount</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Action</th>
+                </tr>
+            </thead>
+            <tbody id="recent-orders-table" class="divide-y divide-gray-200">
+                <!-- JS Populated -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="admin-details-modal"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 overflow-y-auto flex-1" id="admin-details-content">
+            <!-- Content -->
+        </div>
+        <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <button onclick="closeAdminDetailsModal()"
+                class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- User Management Table -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-900">Registered Users</h3>
+        <a href="/admin/users" class="text-brand-blue font-medium text-sm hover:underline">View All</a>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">User Info</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Role</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Joined</th>
+                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Action</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200" id="users-table">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function loadAdminData() {
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = '/login';
+
+        try {
+            // Load Analytics
+            const analyticsResp = await fetch('/api/admin/analytics', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (analyticsResp.status === 403) {
+                alert('Admin access only');
+                window.location.href = '/login';
+                return;
+            }
+
+            const stats = await analyticsResp.json();
+
+            const fmt = n => '₦' + (parseFloat(n)||0).toLocaleString('en-NG', {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('total-revenue').textContent  = fmt(stats.total_revenue);
+            document.getElementById('today-revenue').textContent  = fmt(stats.today_revenue);
+            document.getElementById('month-revenue').textContent  = fmt(stats.month_revenue);
+            document.getElementById('outstanding').textContent    = fmt(stats.outstanding);
+            document.getElementById('total-orders').textContent   = stats.total_orders;
+            document.getElementById('total-users').textContent    = stats.total_users;
+            document.getElementById('total-riders').textContent   = stats.total_riders;
+
+            const statusGrid = document.getElementById('status-grid');
+            statusGrid.innerHTML = '';
+            for (const [status, count] of Object.entries(stats.status_breakdown)) {
+                statusGrid.innerHTML += `
+                <div class="flex-1 min-w-[120px] text-center p-4 rounded-xl bg-gray-50 hover:bg-white hover:shadow-lg transition border border-gray-100">
+                    <div class="text-2xl font-extrabold text-brand-blue mb-1">${count}</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-tight">${status}</div>
+                </div>
+            `;
+            }
+
+            // Load Recent Orders
+            const ordersResp = await fetch('/api/admin/orders', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const orders = await ordersResp.json();
+
+            document.getElementById('recent-orders-table').innerHTML = orders.slice(0, 5).map(o => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 text-sm font-bold text-brand-blue">${o.tracking_id}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900 font-bold">
+                        ${o.customer_name}
+                        <div class="text-xs text-gray-400 font-normal">${o.customer_email}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-gray-800">
+                            ${o.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-bold text-gray-900">₦${o.total_amount}</td>
+                    <td class="px-6 py-4 text-sm font-medium">
+                        <button onclick="showAdminOrderDetails(${o.id})" class="text-brand-blue hover:text-brand-dark font-bold text-xs bg-blue-50 px-3 py-1 rounded-full">View</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Load Users
+            const usersResp = await fetch('/api/admin/users', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const users = await usersResp.json();
+
+            document.getElementById('users-table').innerHTML = users.slice(0, 5).map(u => `
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 text-sm text-gray-400">#${u.id}</td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-brand-light text-brand-blue flex items-center justify-center font-bold mr-3">
+                            ${u.email[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-gray-900">${u.email.split('@')[0]}</div>
+                            <div class="text-xs text-gray-500">${u.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'} uppercase">
+                        ${u.role}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 font-medium">${new Date(u.created_at).toLocaleDateString()}</td>
+                <td class="px-6 py-4 text-sm text-brand-blue hover:text-brand-dark cursor-pointer font-bold">Edit</td>
+            </tr>
+        `).join('');
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function showAdminOrderDetails(orderId) {
+        const token = localStorage.getItem('access_token');
+        const modal = document.getElementById('admin-details-modal');
+        const content = document.getElementById('admin-details-content');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        content.innerHTML = '<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-brand-blue"></i></div>';
+
+        try {
+            const res = await fetch(`/api/admin/orders/${orderId}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const order = await res.json();
+
+            let itemsHtml = order.items.map(i => `
+                <div class="flex justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div>
+                        <span class="font-bold text-gray-800">${i.quantity}x ${i.item_name}</span>
+                        <div class="text-xs text-gray-500">${i.service_type}</div>
+                    </div>
+                    <div class="font-mono text-gray-700">₦${i.price}</div>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-2xl font-bold text-brand-dark">Order ${order.tracking_id}</h3>
+                            <p class="text-sm text-gray-500">${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                        <span class="px-3 py-1 text-sm font-bold rounded-full bg-gray-100">${order.status}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer</h4>
+                    <p class="text-sm font-bold text-gray-900">${order.customer.email}</p>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Items</h4>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        ${itemsHtml}
+                        <div class="flex justify-between pt-4 mt-2 border-t border-gray-200 font-bold text-lg">
+                            <span>Total</span>
+                            <span class="text-brand-blue">₦${order.total_amount}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${order.pickup_address ? `
+                <div class="mb-6">
+                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pickup Location</h4>
+                     <p class="text-sm text-gray-800 bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                        ${order.pickup_address.street}, ${order.pickup_address.city}
+                     </p>
+                </div>
+                ` : ''}
+
+                ${order.rider ? `
+                <div>
+                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Assigned Rider</h4>
+                     <p class="text-sm text-gray-800">
+                        <i class="fas fa-motorcycle text-brand-dark mr-2"></i>
+                        ${order.rider.email}
+                     </p>
+                </div>
+                ` : ''}
+            `;
+
+        } catch (e) {
+            content.innerHTML = '<p class="text-red-500 text-center">Failed to load details.</p>';
+        }
+    }
+
+    function closeAdminDetailsModal() {
+        document.getElementById('admin-details-modal').classList.add('hidden');
+        document.getElementById('admin-details-modal').classList.remove('flex');
+    }
+
+    loadAdminData();
+</script>
+{% endblock %}
+```

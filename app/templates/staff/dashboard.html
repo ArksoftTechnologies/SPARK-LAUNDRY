@@ -1,0 +1,137 @@
+{% extends "dashboard_base.html" %}
+
+{% block sidebar_menu %}
+<p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Staff Portal</p>
+<a href="/dashboard"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+    <i class="fas fa-clipboard-list w-5"></i> Order Queue
+</a>
+<a href="#"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+    <i class="fas fa-users w-5"></i> Customers
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-extrabold text-brand-dark flex items-center gap-2">
+            Processing Department
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">Manage active workflow stages</p>
+    </div>
+    <div class="flex gap-2 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100 items-center">
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        <span class="text-xs text-green-600 font-bold uppercase">System Online</span>
+    </div>
+</div>
+
+<!-- Order Processing Queue -->
+<div class="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50/50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Order ID
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Items</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Current
+                        Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Time in
+                        Stage</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white" id="staff-orders-body">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const ORDER_STAGES = [
+        'Pending Pickup', 'Rider Assigned', 'Picked Up',
+        'Washing', 'Drying', 'Ironing', 'Ready for Delivery',
+        'Out for Delivery', 'Delivered'
+    ];
+
+    async function loadStaffOrders() {
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = '/login';
+
+        try {
+            const response = await fetch('/api/staff/orders', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 403) {
+                alert('Access Denied: Staff only');
+                window.location.href = '/login';
+                return;
+            }
+
+            const orders = await response.json();
+            const tbody = document.getElementById('staff-orders-body');
+
+            tbody.innerHTML = orders.map(order => `
+            <tr class="hover:bg-blue-50/30 transition">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="font-bold text-brand-dark">${order.tracking_id}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span class="bg-gray-100 text-gray-700 py-1 px-2 rounded font-medium text-xs">${order.items_count} Items</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-blue-100 text-blue-800">
+                        ${order.status}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                    <i class="far fa-clock mr-1"></i> Just now
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="relative">
+                        <select onchange="updateStatus(${order.id}, this.value)" class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-brand-blue focus:border-brand-blue sm:text-sm rounded-md shadow-sm">
+                            <option value="" disabled selected>Update Status...</option>
+                            ${ORDER_STAGES.map(stage =>
+                `<option value="${stage}" ${stage === order.status ? 'disabled' : ''}>Move to: ${stage}</option>`
+            ).join('')}
+                        </select>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function updateStatus(orderId, newStatus) {
+        if (!confirm(`Update order #${orderId} to ${newStatus}?`)) return;
+
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch(`/api/staff/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                loadStaffOrders(); // Refresh
+            } else {
+                alert('Failed to update status');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    loadStaffOrders();
+</script>
+{% endblock %}

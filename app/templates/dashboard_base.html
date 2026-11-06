@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spark Laundry - Dashboard</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0066CC',
+                            dark: '#004C99',
+                            light: '#E6F0FA',
+                            yellow: '#FFCC00',
+                            accent: '#F4F7F6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 antialiased font-sans h-screen flex overflow-hidden">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                try {
+                    // Decode JWT Payload (2nd part)
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const role = payload.role;
+
+                    // Show appropriate menu
+                    const menu = document.getElementById('menu-' + role);
+                    if (menu) {
+                        menu.classList.remove('hidden');
+                        menu.classList.add('block');
+                    }
+                } catch (e) {
+                    console.error('Error decoding token', e);
+                }
+            }
+        });
+    </script>
+
+    <!-- Sidebar -->
+    <aside id="mobile-sidebar"
+        class="w-64 bg-white shadow-xl flex flex-col z-20 hidden md:flex fixed inset-y-0 left-0 md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-8 border-b border-gray-100">
+            <a href="/" class="flex items-center gap-2">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Spark Laundry Logo"
+                    class="w-10 h-10 rounded-lg shadow-md">
+                <span class="font-bold text-xl tracking-tight text-brand-dark">Spark<span
+                        class="text-brand-blue">Laundry</span></span>
+            </a>
+        </div>
+
+        <!-- Navigation (Dynamic based on Role - handled by Jinja inheritance or JS) -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+            <!-- Dynamic Menu Sections -->
+            <!-- Dynamic Menu Sections -->
+            <div id="menu-customer" class="hidden space-y-2">
+                <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
+                <a href="/dashboard"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+                    <i class="fas fa-home w-5"></i> Dashboard
+                </a>
+                <a href="/create-order"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-plus-circle w-5"></i> New Order
+                </a>
+                <a href="#"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-history w-5"></i> Order History
+                </a>
+            </div>
+
+            <div id="menu-staff" class="hidden space-y-2">
+                <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Staff Portal</p>
+                <a href="/staff/dashboard"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+                    <i class="fas fa-clipboard-list w-5"></i> Order Queue
+                </a>
+            </div>
+
+            <div id="menu-rider" class="hidden space-y-2">
+                <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Rider App</p>
+                <a href="/rider/dashboard"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-brand-blue bg-blue-50 font-bold transition">
+                    <i class="fas fa-motorcycle w-5"></i> Tasks
+                </a>
+            </div>
+
+            <div id="menu-admin" class="hidden space-y-2">
+                <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
+                <a href="/admin/dashboard"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-chart-line w-5"></i> Analytics
+                </a>
+                <a href="/admin/orders"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-clipboard-list w-5"></i> Orders
+                </a>
+                <a href="/admin/items"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-tags w-5"></i> Products & Prices
+                </a>
+                <a href="/admin/users"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-users w-5"></i> Users
+                </a>
+                <a href="/admin/finance"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-wallet w-5"></i> Finance
+                </a>
+                <a href="/admin/reports"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-chart-bar w-5"></i> Reports
+                </a>
+                <a href="/admin/settings"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+            </div>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-gray-100 space-y-1">
+            <a href="/profile"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-brand-blue font-medium transition">
+                <i class="fas fa-user-circle w-5"></i> My Profile
+            </a>
+            <button onclick="logout()"
+                class="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-medium transition">
+                <i class="fas fa-sign-out-alt w-5"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="mobile-backdrop" onclick="toggleMobileMenu()"
+        class="fixed inset-0 bg-black/50 z-10 hidden md:hidden glass-backdrop transition-opacity duration-300"></div>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Top Header for Mobile/Context -->
+        <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 shadow-sm z-10">
+            <div class="md:hidden">
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="text-gray-600 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <div class="hidden md:flex items-center text-gray-400 text-sm font-medium">
+                <i class="fas fa-calendar mr-2"></i> {{ now_formatted if now_formatted else 'Today' }}
+            </div>
+
+            <div class="flex items-center gap-6">
+                <button class="relative text-gray-400 hover:text-brand-blue transition">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-bold text-gray-900" id="header-username">Loading...</p>
+                        <p class="text-xs text-gray-500" id="header-role">User</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-brand-light border-2 border-white shadow-sm flex items-center justify-center text-brand-blue font-bold text-lg"
+                        id="header-avatar">
+                        U
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto bg-brand-accent p-8 scroll-smooth">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop (Hidden by default) -->
+    <script>
+        // Load User Info into Header
+        async function loadHeaderInfo() {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        const role = user.role.toLowerCase();
+
+                        // Update Header
+                        document.getElementById('header-username').textContent = user.profile.full_name || user.email.split('@')[0];
+                        document.getElementById('header-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                        document.getElementById('header-avatar').textContent = (user.profile.full_name || user.email)[0].toUpperCase();
+
+                        // Show Correct Sidebar Menu
+                        const menus = ['customer', 'staff', 'rider', 'admin'];
+                        menus.forEach(m => document.getElementById('menu-' + m).classList.add('hidden')); // Hide all
+
+                        const menuId = 'menu-' + role;
+                        if (document.getElementById(menuId)) {
+                            document.getElementById(menuId).classList.remove('hidden');
+                        } else {
+                            // Fallback to customer if role menu doesn't exist
+                            document.getElementById('menu-customer').classList.remove('hidden');
+                        }
+                    }
+                } catch (e) { console.error(e); }
+            }
+        }
+        loadHeaderInfo();
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+
+</html>
